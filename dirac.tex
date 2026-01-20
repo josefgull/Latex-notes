@@ -1,0 +1,79 @@
+\documentclass[11pt]{article}
+% Enable LaTeX->HTML conversion
+\usepackage[mathjax]{lwarp}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amsfonts,amssymb}
+
+\title{Dirac Notes for Integration over Energy Surfaces}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section{General Concept}
+The Dirac delta distribution $\delta(x)$ is defined by its action on a sufficiently smooth test function $f(x)$ under an integral:
+\[
+\int_{-\infty}^{\infty} f(x) \delta(x) \, dx = f(0).
+\]
+
+\section{Shifting Properties}
+The Dirac delta can be seen as an operator that "picks out" the value of a function at a specific point. For a function \( f(x) \) and a point \( a \), we consider:
+\[
+\int_{-\infty}^{\infty} f(x) \delta(x - a) \, dx.
+\]
+By substituting \( u = x - a \), we have \( dx = du \). As \( x \to \pm\infty \), \( u \) also goes to \( \pm\infty \). The integral becomes:
+\[
+\int_{-\infty}^{\infty} f(u + a) \delta(u) \, du = f(0 + a) = f(a).
+\]
+This result is fundamental and is often referred to as the \textbf{sifting} or \textbf{sampling property}.
+
+\section{Composition with Functions}
+\subsection{Linear Scaling}
+Consider a linear scaling of the argument $ax$ within the delta function:
+\[
+\int_{-\infty}^{\infty} f(x) \delta(ax) \, dx.
+\]
+Substituting \( u = a x \), which implies \( dx = \frac{du}{a} \), we have:
+\[
+\int_{-\infty}^{\infty} f(x) \delta(a x) \, dx = \int_{-\infty}^{\infty} f\left(\frac{u}{a}\right) \delta(u) \frac{du}{a}.
+\]
+Since the Dirac delta only evaluates the function at \( u = 0 \), it fulfills the symmetry property \( \delta(u) = \delta(-u) \). This ensures that the result depends only on the magnitude of the scaling factor, yielding:
+\[
+\int_{-\infty}^{\infty} f(x) \delta(a x) \, dx = \frac{1}{|a|} f(0).
+\]
+\subsection{Composition with a General Function}
+If the argument is a non-linear function $g(x)$, the delta function triggers only at the roots $x_i$ where $g(x_i) = 0$. 
+Assuming first a single root $x_0$, we linearize $g(x)$ around this point using a Taylor expansion: $g(x) \approx g'(x_0)(x - x_0)$. Using the scaling rule from above, we find:
+\[
+\int_{-\infty}^{\infty} f(x) \delta(g(x)) \, dx \approx \int_{-\infty}^{\infty} f(x) \delta(g'(x_0)(x - x_0)) \, dx = \frac{1}{|g'(x_0)|} f(x_0).
+\]
+If $g(x)$ has multiple isolated roots $x_i$, the integral generalizes to a sum over all these points:
+\[
+\int_{-\infty}^{\infty} f(x) \delta(g(x)) \, dx = \sum_i \frac{f(x_i)}{|g'(x_i)|}.
+\]      
+\subsection{Integration over Energy Surfaces}
+The dispersion relation $E(\mathbf{k})$ defines energy surfaces in momentum space. To integrate a function $f(\mathbf{k})$ over a constant energy surface $E_0$, we use the delta function:
+\[
+\int f(\mathbf{k}) \delta(E(\mathbf{k}) - E_0) \, d\mathbf{k}.
+\]
+The delta function restricts the integration to points where $E(\mathbf{k}) = E_0$. 
+The increase of the energy is given locally by its gradient $\nabla_{\mathbf{k}} E(\mathbf{k})$. A Taylor expansion around a point $\mathbf{k}_0$ on the energy surface yields:
+\[
+E(\mathbf{k}) \approx E(\mathbf{k}_0) + \nabla_{\mathbf{k}} E(\mathbf{k}_0) \cdot (\mathbf{k} - \mathbf{k}_0).
+\]
+Only the component of $\mathbf{k}$ parallel to the gradient (normal to the surface) contributes to the shift in energy. Applying the scaling property from the 1D case to this normal direction, we find:
+\[
+\int f(\mathbf{k}) \delta(E(\mathbf{k}) - E_0) \, d\mathbf{k} = \int_{E(\mathbf{k}) = E_0} \frac{f(\mathbf{k})}{|\nabla_{\mathbf{k}} E(\mathbf{k})|} \, dS,
+\]
+where $dS$ is the surface element on the energy surface defined by $E(\mathbf{k}) = E_0$.
+
+
+
+
+
+
+
+
+\end{document}
