@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8" />
+<meta name="generator" content="LaTeX Lwarp package" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dirac Notes for Integration over Energy Surfaces</title>
+<link rel="stylesheet" type="text/css" href="lwarp.css" />
+
+<script>
+// Lwarp MathJax emulation code
+//
+// Based on code by Davide P. Cervone.
+// Equation numbering: https://github.com/mathjax/MathJax/issues/2427
+// Starred and ifnextchar macros: https://github.com/mathjax/MathJax/issues/2428
+// \left, \right delimiters: https://github.com/mathjax/MathJax/issues/2535
+//
+// Modified by Brian Dunn to adjust equation numbering and add subequations.
+//
+// LaTeX can use \seteqnumber{subequations?}{section}{number} before each equation.
+// subequations? is 0 usually, 1 if inside subequations.
+// section is a string printed as-is, or empty.
+// number is auto-incremented by MathJax between equations.
+//
+MathJax = {
+    subequations: "0",
+    section: "",
+    loader: {
+         load: ['[tex]/tagformat', '[tex]/textmacros'],
+    },
+    startup: {
+         ready() {
+             //       These would be replaced by import commands if you wanted to make
+             //       a proper extension.
+             const Configuration = MathJax._.input.tex.Configuration.Configuration;
+             const CommandMap = MathJax._.input.tex.SymbolMap.CommandMap;
+             const Macro = MathJax._.input.tex.Symbol.Macro;
+             const TexError = MathJax._.input.tex.TexError.default;
+             const ParseUtil = MathJax._.input.tex.ParseUtil.default;
+             const expandable = MathJax._.util.Options.expandable;
+
+
+             //       Insert the replacement string into the TeX string, and check
+             //       that there haven't been too many maxro substitutions (prevents
+             //       infinite loops).
+             const useArgument = (parser, text) => {
+                 parser.string = ParseUtil.addArgs(parser, text, parser.string.slice(parser.i));
+                 parser.i = 0;
+                 if (++parser.macroCount > parser.configuration.options.maxMacros) {
+                     throw new TexError('MaxMacroSub1',
+                     'MathJax maximum macro substitution count exceeded; ' +
+                     'is there a recursive macro call?');
+                 }
+             }
+
+
+             //       Create the command map for:
+             //          \ifstar, \ifnextchar, \ifblank, \ifstrequal, \gsub, \seteqnumber
+             new CommandMap('Lwarp-macros', {
+                 ifstar: 'IfstarFunction',
+                 ifnextchar: 'IfnextcharFunction',
+                 ifblank: 'IfblankFunction',
+                 ifstrequal: 'IfstrequalFunction',
+                 gsubstitute: 'GsubstituteFunction',
+                 seteqnumber: 'SeteqnumberFunction'
+             }, {
+                 //      This function implements an ifstar macro.
+                 IfstarFunction(parser, name) {
+                     const resultstar = parser.GetArgument(name);
+                     const resultnostar = parser.GetArgument(name);
+                     const star = parser.GetStar();                        // true if there is a *
+                     useArgument(parser, star ? resultstar : resultnostar);
+                 },
+
+
+                 //      This function implements an ifnextchar macro.
+                 IfnextcharFunction(parser, name) {
+                     let whichchar = parser.GetArgument(name);
+                     if (whichchar.match(/^(?:0x[0-9A-F]+|[0-9]+)$/i)) {
+                         // $ syntax highlighting
+                         whichchar = String.fromCodePoint(parseInt(whichchar));
+                     }
+                     const resultnextchar = parser.GetArgument(name);
+                     const resultnotnextchar = parser.GetArgument(name);
+                     const gotchar = (parser.GetNext() === whichchar);
+                     useArgument(parser, gotchar ? resultnextchar : resultnotnextchar);
+                 },
+
+
+                 // This function implements an ifblank macro.
+                 IfblankFunction(parser, name) {
+                     const blankarg = parser.GetArgument(name);
+                     const resultblank = parser.GetArgument(name);
+                     const resultnotblank = parser.GetArgument(name);
+                     const isblank = (blankarg.trim() == "");
+                     useArgument(parser, isblank ? resultblank : resultnotblank);
+                 },
+
+
+                 // This function implements an ifstrequal macro.
+                 IfstrequalFunction(parser, name) {
+                     const strequalfirst = parser.GetArgument(name);
+                     const strequalsecond = parser.GetArgument(name);
+                     const resultequal = parser.GetArgument(name);
+                     const resultnotequal = parser.GetArgument(name);
+                     const isequal = (strequalfirst == strequalsecond);
+                     useArgument(parser, isequal ? resultequal : resultnotequal);
+                 },
+
+
+                 // This function implements a gsub macro.
+                 GsubstituteFunction(parser, name) {
+                     const gsubfirst = parser.GetArgument(name);
+                     const gsubsecond = parser.GetArgument(name);
+                     const gsubthird = parser.GetArgument(name);
+                     let gsubresult=gsubfirst.replace(gsubsecond, gsubthird);
+                     useArgument(parser, gsubresult);
+                 },
+
+
+                 //      This function modifies the equation numbers.
+                 SeteqnumberFunction(parser, name) {
+                         //   Get the macro parameters
+                         const star = parser.GetStar();                       // true if there is a *
+                         const optBrackets = parser.GetBrackets(name);        // contents of optional brackets
+                         const newsubequations = parser.GetArgument(name);       // the subequations argument
+                         const neweqsection = parser.GetArgument(name);       // the eq section argument
+                         const neweqnumber = parser.GetArgument(name);        // the eq number argument
+                         MathJax.config.subequations=newsubequations ;        // a string with boolean meaning
+                         MathJax.config.section=neweqsection ;                // a string with numeric meaning
+                         parser.tags.counter = parser.tags.allCounter = neweqnumber ;
+                 }
+
+
+             });
+
+
+             //       Create the Lwarp-macros package
+             Configuration.create('Lwarp-macros', {
+                 handler: {macro: ['Lwarp-macros']}
+             });
+
+
+             MathJax.startup.defaultReady();
+
+
+             // For forward references:
+             MathJax.startup.input[0].preFilters.add(({math}) => {
+                 if (math.inputData.recompile){
+                         MathJax.config.subequations = math.inputData.recompile.subequations;
+                         MathJax.config.section = math.inputData.recompile.section;
+                 }
+             });
+             MathJax.startup.input[0].postFilters.add(({math}) => {
+                 if (math.inputData.recompile){
+                         math.inputData.recompile.subequations = MathJax.config.subequations;
+                         math.inputData.recompile.section = MathJax.config.section;
+                 }
+             });
+
+
+                 // For \left, \right with unicode-math:
+                 const {DelimiterMap} = MathJax._.input.tex.SymbolMap;
+                 const {Symbol} = MathJax._.input.tex.Symbol;
+                 const {MapHandler} = MathJax._.input.tex.MapHandler;
+                 const delimiter = MapHandler.getMap('delimiter');
+                 delimiter.add('\\lBrack', new Symbol('\\lBrack', '\u27E6'));
+                 delimiter.add('\\rBrack', new Symbol('\\rBrack', '\u27E7'));
+                 delimiter.add('\\lAngle', new Symbol('\\lAngle', '\u27EA'));
+                 delimiter.add('\\rAngle', new Symbol('\\rAngle', '\u27EB'));
+                 delimiter.add('\\lbrbrak', new Symbol('\\lbrbrak', '\u2772'));
+                 delimiter.add('\\rbrbrak', new Symbol('\\rbrbrak', '\u2773'));
+                 delimiter.add('\\lbag', new Symbol('\\lbag', '\u27C5'));
+                 delimiter.add('\\rbag', new Symbol('\\rbag', '\u27C6'));
+                 delimiter.add('\\llparenthesis', new Symbol('\\llparenthesis', '\u2987'));
+                 delimiter.add('\\rrparenthesis', new Symbol('\\rrparenthesis', '\u2988'));
+                 delimiter.add('\\llangle', new Symbol('\\llangle', '\u2989'));
+                 delimiter.add('\\rrangle', new Symbol('\\rrangle', '\u298A'));
+                 delimiter.add('\\Lbrbrak', new Symbol('\\Lbrbrak', '\u27EC'));
+                 delimiter.add('\\Rbrbrak', new Symbol('\\Rbrbrak', '\u27ED'));
+                 delimiter.add('\\lBrace', new Symbol('\\lBrace', '\u2983'));
+                 delimiter.add('\\rBrace', new Symbol('\\rBrace', '\u2984'));
+                 delimiter.add('\\lParen', new Symbol('\\lParen', '\u2985'));
+                 delimiter.add('\\rParen', new Symbol('\\rParen', '\u2986'));
+                 delimiter.add('\\lbrackubar', new Symbol('\\lbrackubar', '\u298B'));
+                 delimiter.add('\\rbrackubar', new Symbol('\\rbrackubar', '\u298C'));
+                 delimiter.add('\\lbrackultick', new Symbol('\\lbrackultick', '\u298D'));
+                 delimiter.add('\\rbracklrtick', new Symbol('\\rbracklrtick', '\u298E'));
+                 delimiter.add('\\lbracklltick', new Symbol('\\lbracklltick', '\u298F'));
+                 delimiter.add('\\rbrackurtick', new Symbol('\\rbrackurtick', '\u2990'));
+                 delimiter.add('\\langledot', new Symbol('\\langledot', '\u2991'));
+                 delimiter.add('\\rangledot', new Symbol('\\rangledot', '\u2992'));
+                 delimiter.add('\\lparenless', new Symbol('\\lparenless', '\u2993'));
+                 delimiter.add('\\rparengtr', new Symbol('\\rparengtr', '\u2994'));
+                 delimiter.add('\\Lparengtr', new Symbol('\\Lparengtr', '\u2995'));
+                 delimiter.add('\\Rparenless', new Symbol('\\Rparenless', '\u2996'));
+                 delimiter.add('\\lblkbrbrak', new Symbol('\\lblkbrbrak', '\u2997'));
+                 delimiter.add('\\rblkbrbrak', new Symbol('\\rblkbrbrak', '\u2998'));
+                 delimiter.add('\\lvzigzag', new Symbol('\\lvzigzag', '\u29D8'));
+                 delimiter.add('\\rvzigzag', new Symbol('\\rvzigzag', '\u29D9'));
+                 delimiter.add('\\Lvzigzag', new Symbol('\\Lvzigzag', '\u29DA'));
+                 delimiter.add('\\Rvzigzag', new Symbol('\\Rvzigzag', '\u29DB'));
+                 delimiter.add('\\lcurvyangle', new Symbol('\\lcurvyangle', '\u29FC'));
+                 delimiter.add('\\rcurvyangle', new Symbol('\\rcurvyangle', '\u29FD'));
+                 delimiter.add('\\Vvert', new Symbol('\\Vvert', '\u2980'));
+         }       // ready
+    },           // startup
+
+
+    tex: {
+         packages: {'[+]': ['tagformat', 'Lwarp-macros', 'textmacros']},
+         tags: "ams",
+                 tagformat: {
+                         number: function (n) {
+                              if(MathJax.config.subequations==0)
+                                     return(MathJax.config.section + n);
+                              else
+                                     return(MathJax.config.section + String.fromCharCode(96+n));
+                         },
+                 },
+    }
+}
+</script>
+
+
+<script
+         id="MathJax-script"
+         src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"
+></script>
+
+</head>
+<body>
+
+
+<div class="bodywithoutsidetoc">
+
+
+<main class="bodycontainer">
+
+
+<section class="textbody">
+
+<a id="dirac-autofile-0"></a>
+
+<!--MathJax customizations:-->
+<div data-nosnippet
+    style="display:none"
+>
+
+\(\newcommand{\footnotename}{footnote}\)
+
+\(\def \LWRfootnote {1}\)
+
+\(\newcommand {\footnote }[2][\LWRfootnote ]{{}^{\mathrm {#1}}}\)
+
+\(\newcommand {\footnotemark }[1][\LWRfootnote ]{{}^{\mathrm {#1}}}\)
+
+\(\let \LWRorighspace \hspace \)
+
+\(\renewcommand {\hspace }{\ifstar \LWRorighspace \LWRorighspace }\)
+
+\(\newcommand {\TextOrMath }[2]{#2}\)
+
+\(\newcommand {\mathnormal }[1]{{#1}}\)
+
+\(\newcommand \ensuremath [1]{#1}\)
+
+\(\newcommand {\LWRframebox }[2][]{\fbox {#2}} \newcommand {\framebox }[1][]{\LWRframebox } \)
+
+\(\newcommand {\setlength }[2]{}\)
+
+\(\newcommand {\addtolength }[2]{}\)
+
+\(\newcommand {\setcounter }[2]{}\)
+
+\(\newcommand {\addtocounter }[2]{}\)
+
+\(\newcommand {\arabic }[1]{}\)
+
+\(\newcommand {\number }[1]{}\)
+
+\(\newcommand {\noalign }[1]{\text {#1}\notag \\}\)
+
+\(\newcommand {\cline }[1]{}\)
+
+\(\newcommand {\directlua }[1]{\text {(directlua)}}\)
+
+\(\newcommand {\luatexdirectlua }[1]{\text {(directlua)}}\)
+
+\(\newcommand {\protect }{}\)
+
+\(\def \LWRabsorbnumber #1 {}\)
+
+\(\def \LWRabsorbquotenumber &quot;#1 {}\)
+
+\(\newcommand {\LWRabsorboption }[1][]{}\)
+
+\(\newcommand {\LWRabsorbtwooptions }[1][]{\LWRabsorboption }\)
+
+\(\def \mathchar {\ifnextchar &quot;\LWRabsorbquotenumber \LWRabsorbnumber }\)
+
+\(\def \mathcode #1={\mathchar }\)
+
+\(\let \delcode \mathcode \)
+
+\(\let \delimiter \mathchar \)
+
+\(\def \oe {\unicode {x0153}}\)
+
+\(\def \OE {\unicode {x0152}}\)
+
+\(\def \ae {\unicode {x00E6}}\)
+
+\(\def \AE {\unicode {x00C6}}\)
+
+\(\def \aa {\unicode {x00E5}}\)
+
+\(\def \AA {\unicode {x00C5}}\)
+
+\(\def \o {\unicode {x00F8}}\)
+
+\(\def \O {\unicode {x00D8}}\)
+
+\(\def \l {\unicode {x0142}}\)
+
+\(\def \L {\unicode {x0141}}\)
+
+\(\def \ss {\unicode {x00DF}}\)
+
+\(\def \SS {\unicode {x1E9E}}\)
+
+\(\def \dag {\unicode {x2020}}\)
+
+\(\def \ddag {\unicode {x2021}}\)
+
+\(\def \P {\unicode {x00B6}}\)
+
+\(\def \copyright {\unicode {x00A9}}\)
+
+\(\def \pounds {\unicode {x00A3}}\)
+
+\(\let \LWRref \ref \)
+
+\(\renewcommand {\ref }{\ifstar \LWRref \LWRref }\)
+
+\( \newcommand {\multicolumn }[3]{#3}\)
+
+\(\require {textcomp}\)
+
+\(\newcommand {\intertext }[1]{\text {#1}\notag \\}\)
+
+\(\let \Hat \hat \)
+
+\(\let \Check \check \)
+
+\(\let \Tilde \tilde \)
+
+\(\let \Acute \acute \)
+
+\(\let \Grave \grave \)
+
+\(\let \Dot \dot \)
+
+\(\let \Ddot \ddot \)
+
+\(\let \Breve \breve \)
+
+\(\let \Bar \bar \)
+
+\(\let \Vec \vec \)
+
+</div>
+
+<a id="dirac-autopage-1"></a>
+<div class="titlepage">
+
+<h1>Dirac Notes for Integration over Energy Surfaces</h1>
+
+
+<div class="author">
+
+
+<div class="oneauthor">
+
+</div>
+
+</div>
+
+
+<div class="titledate">
+
+<p>
+January 20, 2026
+</p>
+</div>
+
+</div>
+<!--
+...... section Contents ......
+-->
+<h4 id="autosec-3">Contents</h4>
+<a id="dirac-autopage-3"></a>
+
+
+
+<nav class="toc">
+
+<p>
+<a href="dirac.html#autosec-4" class="tocsection" >
+<span class="sectionnumber">1</span>&#x2003;General Concept</a>
+</p>
+
+
+<p>
+<a href="dirac.html#autosec-5" class="tocsection" >
+<span class="sectionnumber">2</span>&#x2003;Shifting Properties</a>
+</p>
+
+
+<p>
+<a href="dirac.html#autosec-6" class="tocsection" >
+<span class="sectionnumber">3</span>&#x2003;Composition with Functions</a>
+</p>
+
+
+<p>
+<a href="dirac.html#autosec-7" class="tocsubsection" >
+<span class="sectionnumber">3.1</span>&#x2003;Linear Scaling</a>
+</p>
+
+
+<p>
+<a href="dirac.html#autosec-8" class="tocsubsection" >
+<span class="sectionnumber">3.2</span>&#x2003;Composition with a General Function</a>
+</p>
+
+
+<p>
+<a href="dirac.html#autosec-9" class="tocsubsection" >
+<span class="sectionnumber">3.3</span>&#x2003;Integration over Energy Surfaces</a>
+</p>
+</nav>
+<!--
+...... section General Concept ......
+-->
+<h4 id="autosec-4"><span class="sectionnumber">1&#x2003;</span>General Concept</h4>
+<a id="dirac-autopage-4"></a>
+
+
+<p>
+The Dirac delta distribution \(\delta (x)\) is defined by its action on a sufficiently smooth test function \(f(x)\) under an integral:
+</p>
+
+<p>
+\[ \int _{-\infty }^{\infty } f(x) \delta (x) \, dx = f(0). \]
+</p>
+<!--
+...... section Shifting Properties ......
+-->
+<h4 id="autosec-5"><span class="sectionnumber">2&#x2003;</span>Shifting Properties</h4>
+<a id="dirac-autopage-5"></a>
+
+
+<p>
+The Dirac delta can be seen as an operator that ”picks out” the value of a function at a specific point. For a function \(f(x) \) and a point \(a \), we consider:
+</p>
+
+<p>
+\[ \int _{-\infty }^{\infty } f(x) \delta (x - a) \, dx. \]
+</p>
+
+<p>
+By substituting \(u = x - a \), we have \(dx = du \). As \(x \to \pm \infty \), \(u \) also goes to \(\pm \infty \). The integral becomes:
+</p>
+
+<p>
+\[ \int _{-\infty }^{\infty } f(u + a) \delta (u) \, du = f(0 + a) = f(a). \]
+</p>
+
+<p>
+This result is fundamental and is often referred to as the <b>sifting</b> or <b>sampling property</b>.
+</p>
+<!--
+...... section Composition with Functions ......
+-->
+<h4 id="autosec-6"><span class="sectionnumber">3&#x2003;</span>Composition with Functions</h4>
+<a id="dirac-autopage-6"></a>
+<!--
+...... subsection Linear Scaling ......
+-->
+<h5 id="autosec-7"><span class="sectionnumber">3.1&#x2003;</span>Linear Scaling</h5>
+<a id="dirac-autopage-7"></a>
+
+
+<p>
+Consider a linear scaling of the argument \(ax\) within the delta function:
+</p>
+
+<p>
+\[ \int _{-\infty }^{\infty } f(x) \delta (ax) \, dx. \]
+</p>
+
+<p>
+Substituting \(u = a x \), which implies \(dx = \frac {du}{a} \), we have:
+</p>
+
+<p>
+\[ \int _{-\infty }^{\infty } f(x) \delta (a x) \, dx = \int _{-\infty }^{\infty } f\left (\frac {u}{a}\right ) \delta (u) \frac {du}{a}. \]
+</p>
+
+<p>
+Since the Dirac delta only evaluates the function at \(u = 0 \), it fulfills the symmetry property \(\delta (u) = \delta (-u) \). This ensures that the result depends only on the magnitude of the scaling factor, yielding:
+</p>
+
+<p>
+\[ \int _{-\infty }^{\infty } f(x) \delta (a x) \, dx = \frac {1}{|a|} f(0). \]
+</p>
+<!--
+...... subsection Composition with a General Function ......
+-->
+<h5 id="autosec-8"><span class="sectionnumber">3.2&#x2003;</span>Composition with a General Function</h5>
+<a id="dirac-autopage-8"></a>
+
+
+<p>
+If the argument is a non-linear function \(g(x)\), the delta function triggers only at the roots \(x_i\) where \(g(x_i) = 0\). Assuming first a single root \(x_0\), we linearize \(g(x)\) around this point using a Taylor expansion: \(g(x) \approx
+g&apos;(x_0)(x - x_0)\). Using the scaling rule from above, we find:
+</p>
+
+<p>
+\[ \int _{-\infty }^{\infty } f(x) \delta (g(x)) \, dx \approx \int _{-\infty }^{\infty } f(x) \delta (g&apos;(x_0)(x - x_0)) \, dx = \frac {1}{|g&apos;(x_0)|} f(x_0). \]
+</p>
+
+<p>
+If \(g(x)\) has multiple isolated roots \(x_i\), the integral generalizes to a sum over all these points:
+</p>
+
+<p>
+\[ \int _{-\infty }^{\infty } f(x) \delta (g(x)) \, dx = \sum _i \frac {f(x_i)}{|g&apos;(x_i)|}. \]
+</p>
+<!--
+...... subsection Integration over Energy Surfaces ......
+-->
+<h5 id="autosec-9"><span class="sectionnumber">3.3&#x2003;</span>Integration over Energy Surfaces</h5>
+<a id="dirac-autopage-9"></a>
+
+
+<p>
+The dispersion relation \(E(\mathbf {k})\) defines energy surfaces in momentum space. To integrate a function \(f(\mathbf {k})\) over a constant energy surface \(E_0\), we use the delta function:
+</p>
+
+<p>
+\[ \int f(\mathbf {k}) \delta (E(\mathbf {k}) - E_0) \, d\mathbf {k}. \]
+</p>
+
+<p>
+The delta function restricts the integration to points where \(E(\mathbf {k}) = E_0\). The increase of the energy is given locally by its gradient \(\nabla _{\mathbf {k}} E(\mathbf {k})\). A Taylor expansion around a point \(\mathbf {k}_0\)
+on the energy surface yields:
+</p>
+
+<p>
+\[ E(\mathbf {k}) \approx E(\mathbf {k}_0) + \nabla _{\mathbf {k}} E(\mathbf {k}_0) \cdot (\mathbf {k} - \mathbf {k}_0). \]
+</p>
+
+<p>
+Only the component of \(\mathbf {k}\) parallel to the gradient (normal to the surface) contributes to the shift in energy. Applying the scaling property from the 1D case to this normal direction, we find:
+</p>
+
+<p>
+\[ \int f(\mathbf {k}) \delta (E(\mathbf {k}) - E_0) \, d\mathbf {k} = \int _{E(\mathbf {k}) = E_0} \frac {f(\mathbf {k})}{|\nabla _{\mathbf {k}} E(\mathbf {k})|} \, dS, \]
+</p>
+
+<p>
+where \(dS\) is the surface element on the energy surface defined by \(E(\mathbf {k}) = E_0\).
+</p>
+
+<a id="dirac-autofile-last"></a>
+</section>
+
+</main>
+
+</div>
+
+</body>
+</html>
